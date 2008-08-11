@@ -16,6 +16,19 @@ COLOR_FORMAT = '\033[38;5;%um'
 BEGIN_REVERSE_FORMAT = '\033[7m'
 END_REVERSE_FORMAT = '\033[27m'
 
+# Everything in the unified diff format is identified by a prefix. The prefixes are:
+# 'Index: ':    File marker (unified diff)
+# 'diff --git': File marker (git-style diff)
+# 'old mode':   File permissions mode before change
+# 'new mode':   File permissions mode after change
+# '---':        Defining '-' (giving the name and modification date of the file before change)
+# '+++':        Defining '+' (giving the name and modification date of the file after change)
+# '-':          Line before change (i.e., removed)
+# '+':          Line after change (i.e., added)
+# ' ':          Line that hasn't changed
+# '@@':         Hunk start (@@ -start,length +start, length @@)
+#
+# We need to look for these prefixes in order, in order to handle '---'/'+++' before '-'/'+'. Hence the OrderedDict.
 class OrderedDict(dict):
 	def __init__(self, input=None):
 		if input is None:
@@ -37,6 +50,8 @@ class OrderedDict(dict):
 		super(OrderedDict, self).__delitem__(k)
 		self.keys.remove(k)
 
+# Each value includes not only the terminal-config characters, but also the key, somewhere within it (possibly between two terminal-config strings).
+# Theoretically, you could replace the key with some other string or leave it out entirely, if you wanted to, but I wouldn't recommend it.
 prefixes = OrderedDict()
 prefixes['---'] = (
 	COLOR_FORMAT % (REMOVED_COLOR,)
