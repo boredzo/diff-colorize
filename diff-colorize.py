@@ -5,9 +5,9 @@ import os
 import fileinput
 
 index_color      = int(os.environ.get('DIFF_INDEX_COLOR', 32))
-old_mode_color   = int(os.environ.get('DIFF_OLD_MODE_COLOR', 124))
+old_mode_color   = int(os.environ.get('DIFF_OLD_MODE_COLOR', 88))
 new_mode_color   = int(os.environ.get('DIFF_NEW_MODE_COLOR', 28))
-removed_color    = int(os.environ.get('DIFF_REMOVED_COLOR', 203))
+removed_color    = int(os.environ.get('DIFF_REMOVED_COLOR', 160))
 added_color      = int(os.environ.get('DIFF_ADDED_COLOR', 2))
 hunk_start_color = int(os.environ.get('DIFF_HUNK_START_COLOR', 32))
 
