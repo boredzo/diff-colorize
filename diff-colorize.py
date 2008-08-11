@@ -125,5 +125,3 @@ for line in fileinput.input():
 	sys.stdout.write(line)
 
 	sys.stdout.write(RESET_FORMAT)
-
-print RESET_FORMAT
