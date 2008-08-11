@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import sys
 import os
+import fileinput
 
 INDEX_COLOR      = int(os.environ.get('DIFF_INDEX_COLOR', 32))
 OLD_MODE_COLOR   = int(os.environ.get('DIFF_OLD_MODE_COLOR', 124))
@@ -79,9 +81,6 @@ prefixes['@@'] = (
 	+ BEGIN_REVERSE_FORMAT
 	+ '@@'
 )
-
-import sys
-import fileinput
 
 for line in fileinput.input():
 	for prefix_to_test in prefixes:
