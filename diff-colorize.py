@@ -16,6 +16,21 @@ COLOR_FORMAT = '\033[38;5;%um'
 BEGIN_REVERSE_FORMAT = '\033[7m'
 END_REVERSE_FORMAT = '\033[27m'
 
+USAGE = """
+Usage: diff ... | diff-colorize
+   or:            diff-colorize < foo.diff
+
+Reads unified or git-style diff data from standard input, colorizes it, and writes the result to standard output.
+
+You can customize the color numbers used by setting these variables in your environment:
+* DIFF_INDEX_COLOR (lines starting with "Index: " or "diff --git ")
+* DIFF_OLD_MODE_COLOR (lines starting with "old mode"; these only appear in git-style diffs)
+* DIFF_NEW_MODE_COLOR (lines starting with "new mode"; these only appear in git-style diffs)
+* DIFF_REMOVED_COLOR (lines starting with "-")
+* DIFF_ADDED_COLOR (lines starting with "+")
+* DIFF_HUNK_START_COLOR (lines starting with "@@")
+""".strip()
+
 # Everything in the unified diff format is identified by a prefix. The prefixes are:
 # 'Index: ':    File marker (unified diff)
 # 'diff --git': File marker (git-style diff)
@@ -96,6 +111,10 @@ prefixes['@@'] = (
 	+ BEGIN_REVERSE_FORMAT
 	+ '@@'
 )
+
+if sys.stdin.isatty():
+	# Standard input is a TTY, meaning that the user ran 'diff-colorize' at the shell prompt, without redirecting anything into it. Print usage info and exit.
+	sys.exit(USAGE)
 
 for line in fileinput.input():
 	for prefix_to_test in prefixes:
