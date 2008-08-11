@@ -9,33 +9,66 @@ INDEX_COLOR = 32
 REMOVED_COLOR = 203
 ADDED_COLOR = 2
 
-prefixes_to_invert = ['---', '+++', '-', '+']
+class OrderedDict(dict):
+	def __init__(self, input=None):
+		if input is None:
+			self.keys = []
+			super(OrderedDict, self).__init__()
+		elif isinstance(input, dict):
+			self.keys = list(input)
+			super(OrderedDict, self).__init__(input)
+		else:
+			self.keys = [k for k, v in input]
+			super(OrderedDict, self).__init__(input)
+	def __iter__(self):
+		return iter(self.keys)
+	def __setitem__(self, k, v):
+		if k not in self:
+			self.keys.append(k)
+		super(OrderedDict, self).__setitem__(k, v)
+	def __delitem__(self, k):
+		super(OrderedDict, self).__delitem__(k)
+		self.keys.remove(k)
+
+prefixes = OrderedDict()
+prefixes['---'] = (
+	COLOR_FORMAT % (REMOVED_COLOR,)
+	+ BEGIN_REVERSE_FORMAT 
+	+ '---'
+	+ END_REVERSE_FORMAT
+)
+prefixes['+++'] = (
+	COLOR_FORMAT % (ADDED_COLOR,)
+	+ BEGIN_REVERSE_FORMAT 
+	+ '+++'
+	+ END_REVERSE_FORMAT
+)
+prefixes['-'] = (
+	COLOR_FORMAT % (REMOVED_COLOR,)
+	+ BEGIN_REVERSE_FORMAT 
+	+ '-'
+	+ END_REVERSE_FORMAT
+)
+prefixes['+'] = (
+	COLOR_FORMAT % (ADDED_COLOR,)
+	+ BEGIN_REVERSE_FORMAT 
+	+ '+'
+	+ END_REVERSE_FORMAT
+)
+prefixes['Index: '] = COLOR_FORMAT % (INDEX_COLOR,) + 'Index: '
+prefixes['diff --git '] = COLOR_FORMAT % (INDEX_COLOR,) + 'diff --git '
 
 import sys
 import fileinput
 
 for line in fileinput.input():
-	if line.startswith('Index: ') or line.startswith('diff --git '):
-		color = INDEX_COLOR
-	elif line.startswith('-'):
-		color = REMOVED_COLOR
-	elif line.startswith('+'):
-		color = ADDED_COLOR
-	else:
-		color = None
-
-	if color is not None:
-		sys.stdout.write(COLOR_FORMAT % (color,))
-		for prefix in prefixes_to_invert:
-			if line.startswith(prefix):
-				sys.stdout.write(BEGIN_REVERSE_FORMAT)
-				sys.stdout.write(prefix)
-				sys.stdout.write(END_REVERSE_FORMAT)
-				line = line[len(prefix):]
-				break
-	else:
-		sys.stdout.write(RESET_FORMAT)
+	for prefix_to_test in prefixes:
+		if line.startswith(prefix_to_test):
+			sys.stdout.write(prefixes[prefix_to_test])
+			line = line[len(prefix_to_test):]
 
 	sys.stdout.write(line)
+
+	sys.stdout.write(RESET_FORMAT)
 
 print RESET_FORMAT
