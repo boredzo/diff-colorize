@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-INDEX_COLOR = 32
-REMOVED_COLOR = 203
-ADDED_COLOR = 2
-HUNK_START_COLOR = 32
+import os
+
+INDEX_COLOR      = int(os.environ.get('DIFF_INDEX_COLOR', 32))
+REMOVED_COLOR    = int(os.environ.get('DIFF_REMOVED_COLOR', 203))
+ADDED_COLOR      = int(os.environ.get('DIFF_ADDED_COLOR', 2))
+HUNK_START_COLOR = int(os.environ.get('DIFF_HUNK_START_COLOR', 32))
 
 RESET_FORMAT = '\033[0m'
 COLOR_FORMAT = '\033[38;5;%um'
