@@ -8,6 +8,7 @@ END_REVERSE_FORMAT = '\033[27m'
 INDEX_COLOR = 32
 REMOVED_COLOR = 203
 ADDED_COLOR = 2
+HUNK_START_COLOR = 32
 
 class OrderedDict(dict):
 	def __init__(self, input=None):
@@ -57,6 +58,11 @@ prefixes['+'] = (
 )
 prefixes['Index: '] = COLOR_FORMAT % (INDEX_COLOR,) + 'Index: '
 prefixes['diff --git '] = COLOR_FORMAT % (INDEX_COLOR,) + 'diff --git '
+prefixes['@@'] = (
+	COLOR_FORMAT % (HUNK_START_COLOR,)
+	+ BEGIN_REVERSE_FORMAT
+	+ '@@'
+)
 
 import sys
 import fileinput
