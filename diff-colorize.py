@@ -4,15 +4,25 @@ import sys
 import os
 import fileinput
 
-index_color      = int(os.environ.get('DIFF_INDEX_COLOR', 32))
-old_mode_color   = int(os.environ.get('DIFF_OLD_MODE_COLOR', 88))
-new_mode_color   = int(os.environ.get('DIFF_NEW_MODE_COLOR', 28))
-removed_color    = int(os.environ.get('DIFF_REMOVED_COLOR', 160))
-added_color      = int(os.environ.get('DIFF_ADDED_COLOR', 2))
-hunk_start_color = int(os.environ.get('DIFF_HUNK_START_COLOR', 32))
+has_256_color = (os.environ.get('TERM', None) == 'xterm-256color')
+
+index_color      = int(os.environ.get('DIFF_INDEX_COLOR',
+	 32 if has_256_color else 36))
+old_mode_color   = int(os.environ.get('DIFF_OLD_MODE_COLOR',
+	 88 if has_256_color else 31))
+new_mode_color   = int(os.environ.get('DIFF_NEW_MODE_COLOR',
+	 28 if has_256_color else 32))
+removed_color    = int(os.environ.get('DIFF_REMOVED_COLOR',
+	160 if has_256_color else 31))
+added_color      = int(os.environ.get('DIFF_ADDED_COLOR',
+	  2 if has_256_color else 32))
+hunk_start_color = int(os.environ.get('DIFF_HUNK_START_COLOR',
+	 32 if has_256_color else 36))
 
 RESET_FORMAT = '\033[0m'
-COLOR_FORMAT = '\033[38;5;%um'
+COLOR_FORMAT_256 = '\033[38;5;%um'
+COLOR_FORMAT_16 = '\033[38;%um'
+COLOR_FORMAT = COLOR_FORMAT_256 if has_256_color else COLOR_FORMAT_16
 BEGIN_REVERSE_FORMAT = '\033[7m'
 END_REVERSE_FORMAT = '\033[27m'
 
