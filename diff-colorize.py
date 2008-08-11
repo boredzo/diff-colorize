@@ -3,6 +3,8 @@
 import os
 
 INDEX_COLOR      = int(os.environ.get('DIFF_INDEX_COLOR', 32))
+OLD_MODE_COLOR   = int(os.environ.get('DIFF_OLD_MODE_COLOR', 124))
+NEW_MODE_COLOR   = int(os.environ.get('DIFF_NEW_MODE_COLOR', 28))
 REMOVED_COLOR    = int(os.environ.get('DIFF_REMOVED_COLOR', 203))
 ADDED_COLOR      = int(os.environ.get('DIFF_ADDED_COLOR', 2))
 HUNK_START_COLOR = int(os.environ.get('DIFF_HUNK_START_COLOR', 32))
@@ -56,6 +58,18 @@ prefixes['+'] = (
 	COLOR_FORMAT % (ADDED_COLOR,)
 	+ BEGIN_REVERSE_FORMAT 
 	+ '+'
+	+ END_REVERSE_FORMAT
+)
+prefixes['old mode'] = ( # Git-style diffs only
+	COLOR_FORMAT % (OLD_MODE_COLOR,)
+	+ BEGIN_REVERSE_FORMAT 
+	+ 'old mode'
+	+ END_REVERSE_FORMAT
+)
+prefixes['new mode'] = ( # Git-style diffs only
+	COLOR_FORMAT % (NEW_MODE_COLOR,)
+	+ BEGIN_REVERSE_FORMAT 
+	+ 'new mode'
 	+ END_REVERSE_FORMAT
 )
 prefixes['Index: '] = COLOR_FORMAT % (INDEX_COLOR,) + 'Index: '
