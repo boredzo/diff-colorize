@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-RESET_FORMAT = '\033[0m'
-COLOR_FORMAT = '\033[38;5;%um'
-BEGIN_REVERSE_FORMAT = '\033[7m'
-END_REVERSE_FORMAT = '\033[27m'
-
 INDEX_COLOR = 32
 REMOVED_COLOR = 203
 ADDED_COLOR = 2
 HUNK_START_COLOR = 32
+
+RESET_FORMAT = '\033[0m'
+COLOR_FORMAT = '\033[38;5;%um'
+BEGIN_REVERSE_FORMAT = '\033[7m'
+END_REVERSE_FORMAT = '\033[27m'
 
 class OrderedDict(dict):
 	def __init__(self, input=None):
