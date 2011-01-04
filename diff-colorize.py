@@ -122,16 +122,17 @@ prefixes['@@'] = (
 	+ '@@'
 )
 
-if sys.stdin.isatty():
-	# Standard input is a TTY, meaning that the user ran 'diff-colorize' at the shell prompt, without redirecting anything into it. Print usage info and exit.
-	sys.exit(USAGE)
+if __name__ == "__main__":
+	if sys.stdin.isatty():
+		# Standard input is a TTY, meaning that the user ran 'diff-colorize' at the shell prompt, without redirecting anything into it. Print usage info and exit.
+		sys.exit(USAGE)
 
-for line in fileinput.input():
-	for prefix_to_test in prefixes:
-		if line.startswith(prefix_to_test):
-			sys.stdout.write(prefixes[prefix_to_test])
-			line = line[len(prefix_to_test):]
+	for line in fileinput.input():
+		for prefix_to_test in prefixes:
+			if line.startswith(prefix_to_test):
+				sys.stdout.write(prefixes[prefix_to_test])
+				line = line[len(prefix_to_test):]
 
-	sys.stdout.write(line)
+		sys.stdout.write(line)
 
-	sys.stdout.write(RESET_FORMAT)
+		sys.stdout.write(RESET_FORMAT)
