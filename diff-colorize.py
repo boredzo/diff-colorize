@@ -41,6 +41,32 @@ You can customize the color numbers used by setting these variables in your envi
 * DIFF_HUNK_START_COLOR (lines starting with "@@")
 """.strip()
 
+def interleave(*sequences):
+	"Generator that yields one object from each sequence in turn."
+	
+	def zip_pad(*iterables, **kw):
+		"Downloaded from http://code.activestate.com/recipes/497007/"
+		from itertools import izip, chain
+		if kw:
+			assert len(kw) == 1
+			pad = kw["pad"]
+		else:
+			pad = None
+		done = [len(iterables)-1]
+		def pad_iter():
+			if not done[0]:
+				return
+			done[0] -= 1
+			while 1:
+				yield pad
+		iterables = [chain(seq, pad_iter()) for seq in iterables]
+		return izip(*iterables)
+
+	for objects in zip_pad(*sequences):
+		for obj in objects:
+			if obj is not None:
+				yield obj
+
 # Everything in the unified diff format is identified by a prefix. The prefixes are:
 # 'Index: ':    File marker (unified diff)
 # 'diff --git': File marker (git-style diff)
@@ -127,7 +153,30 @@ if __name__ == "__main__":
 		# Standard input is a TTY, meaning that the user ran 'diff-colorize' at the shell prompt, without redirecting anything into it. Print usage info and exit.
 		sys.exit(USAGE)
 
+	# Buffers to support interleaving old and new lines that were contiguous runs.
+	buffer_old = [] # '-' lines
+	buffer_new = [] # '+' lines
+
 	for line in fileinput.input():
+		if line.startswith('-') and not line.startswith('---'):
+			buffer_old.append(line)
+			continue
+		elif line.startswith('+') and not line.startswith('+++'):
+			buffer_new.append(line)
+			continue
+		else:
+			# Flush the buffers, interleaving the lines.
+			for buffered_line in interleave(buffer_old, buffer_new):
+				prefix = '-' if buffered_line.startswith('-') else '+'
+				buffered_line = buffered_line[len(prefix):]
+
+				sys.stdout.write(prefixes[prefix])
+				sys.stdout.write(buffered_line)
+				sys.stdout.write(RESET_FORMAT)
+
+			del buffer_old[:]
+			del buffer_new[:]
+
 		for prefix_to_test in prefixes:
 			if line.startswith(prefix_to_test):
 				sys.stdout.write(prefixes[prefix_to_test])
