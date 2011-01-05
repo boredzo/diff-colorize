@@ -67,6 +67,136 @@ def interleave(*sequences):
 			if obj is not None:
 				yield obj
 
+class Substring(object):
+	def __init__(self, a, a_start, a_stop, b, b_start, b_stop):
+		self.a = a
+		self.a_start = a_start
+		self.a_stop = a_stop
+		self.b = b
+		self.b_start = b_start
+		self.b_stop = b_stop
+
+	def before_a_substring(self):
+		return self.a[:self.a_start]
+	def before_b_substring(self):
+		return self.b[:self.b_start]
+	def substring(self):
+		return ''.join(self.a[self.a_start:self.a_stop])
+	a_substring = substring
+	b_substring = substring
+	def after_a_substring(self):
+		return self.a[self.a_stop:]
+	def after_b_substring(self):
+		return self.b[self.b_stop:]
+
+	def __hash__(self):
+		return hash(self.substring())
+	def __cmp__(self, other):
+		return cmp(self.a_start, other.a_start)
+	def __eq__(self, other):
+		return self.substring() == other.substring()
+	def __str__(self):
+		return self.substring()
+	def __repr__(self):
+		return 'Substring(%r)' % (self.substring(),)
+		return 'Substring(%r from %r, %r, %r, %r, %r, %r)' % (
+			self.substring(),
+			self.a, self.a_start, self.a_stop,
+			self.b, self.b_start, self.b_stop,
+			)
+
+def longest_common_substring(a, b):
+	"""Returns a set of common substrings between a and b, which can be any finite indexable sliceable sequences. Substrings are returned as Substring objects.
+
+Clarified and slightly modified (to use a special Substring object) from http://en.wikibooks.org/w/index.php?title=Algorithm_implementation/Strings/Longest_common_substring&oldid=1419225#Python
+"""
+	a_len = len(a)
+	b_len = len(b)
+	lengths = [[0] * (b_len + 1) for i in xrange(a_len + 1)]
+	substrings = set()
+	greatest_length = current_run_length = 0
+	for a_idx in xrange(a_len):
+		for b_idx in xrange(b_len):
+			if a[a_idx] == b[b_idx]:
+				current_run_length = lengths[a_idx][b_idx] + 1
+				lengths[a_idx+1][b_idx+1] = current_run_length
+				if current_run_length > greatest_length:
+					greatest_length = current_run_length
+					substrings.clear()
+				if current_run_length == greatest_length:
+					# substrings.add(a[a_idx - current_run_length + 1:a_idx + 1])
+					substrings.add(Substring(a, a_idx - current_run_length + 1, a_idx + 1, b, b_idx - current_run_length + 1, b_idx + 1))
+	else:
+		if current_run_length > 0:
+			substrings.add(Substring(a, a_idx - current_run_length + 1, a_idx + 1, b, b_idx - current_run_length + 1, b_idx + 1))
+	return substrings
+
+def common_and_distinct_substrings(a, b):
+	"Takes two strings, a and b, tokenizes them, and returns a linked list whose nodes contain runs of either common or unique tokens."
+	def tokenize(a):
+		"Each token is an identifier, a number, or a single character."
+		import re
+		# Identifier, binary number, hex number, decimal number, operator, other punctuation.
+		token_exp = re.compile('[_a-zA-Z][_a-zA-Z0-9]+:?|0b[01]+|0[xX][0-9A-Fa-f]+|[0-9]+|[-+*|&^/%\[\]<=>,]|[()\\\\;`{}]')
+		start = 0
+		for match in token_exp.finditer(a):
+			for ch in a[start:match.start()]:
+				yield ch
+			yield match.group(0)
+			start = match.end()
+
+		remainder = a[start:]
+		if remainder:
+			yield remainder
+
+	a = list(tokenize(a))
+	b = list(tokenize(b))
+
+	class DualPayloadLinkedListNode(object):
+		"This linked list gives each node two next pointers."
+		def __init__(self, a, b, differ=None):
+			self.a = a
+			self.b = b
+			self.next = None
+			if differ is None:
+				differ = (self.a != self.b)
+			self.differ = differ
+		def __iter__(self):
+			def walk_linked_list(x):
+				while x is not None:
+					yield x
+					x = x.next
+			return walk_linked_list(self)
+		def __repr__(self):
+			return repr([('(%r, %r)' % (x.a, x.b)) if x.differ else repr(x.a) for x in self])
+
+	# Linked-list nodes for common substrings will have a single Substring object in both payloads.
+	# Nodes for difference runs will have a string in each payload.
+	empty_substring = Substring(a, 0, 0, b, 0, 0)
+	chunks_head = DualPayloadLinkedListNode(empty_substring, empty_substring, False)
+	# This node is used when the input strings have no common substrings. When they do have common substrings, this node will be replaced with a real node.
+	chunks_head.next = DualPayloadLinkedListNode(empty_substring, empty_substring, False)
+	# Not chunks_head.next, since it will be replaced.
+	chunks_tail = chunks_head
+	for sub in sorted(longest_common_substring(a, b)):
+		last_sub = chunks_tail.a
+		a_dif_run = ''.join(a[last_sub.a_stop:sub.a_start])
+		b_dif_run = ''.join(b[last_sub.b_stop:sub.b_start])
+		if a_dif_run or b_dif_run:
+			chunks_tail.next = DualPayloadLinkedListNode(a_dif_run, b_dif_run, True)
+			chunks_tail = chunks_tail.next
+		chunks_tail.next = DualPayloadLinkedListNode(sub, sub, False)
+		chunks_tail = chunks_tail.next
+	else:
+		# Get what comes after the last substring, if anything.
+		last_sub = chunks_tail.a
+		a_dif_run = ''.join(a[last_sub.a_stop:])
+		b_dif_run = ''.join(b[last_sub.b_stop:])
+		if a_dif_run or b_dif_run:
+			chunks_tail.next = DualPayloadLinkedListNode(a_dif_run, b_dif_run, True)
+
+	return chunks_head.next
+
 # Everything in the unified diff format is identified by a prefix. The prefixes are:
 # 'Index: ':    File marker (unified diff)
 # 'diff --git': File marker (git-style diff)
@@ -157,6 +287,55 @@ if __name__ == "__main__":
 	buffer_old = [] # '-' lines
 	buffer_new = [] # '+' lines
 
+	def flush_buffers(buffer_old, buffer_new):
+		"Flush the buffers, interleaving the lines and highlighting differences between them."
+		def print_single_line(buffered_line):
+			prefix = '-' if buffered_line.startswith('-') else '+'
+			buffered_line = buffered_line[len(prefix):]
+
+			sys.stdout.write(prefixes[prefix])
+			sys.stdout.write(buffered_line)
+			sys.stdout.write(RESET_FORMAT)
+
+		last_line_if_old = None
+		for buffered_line in interleave(buffer_old, buffer_new):
+			if buffered_line.startswith('-'):
+				if last_line_if_old is not None:
+					print_single_line(last_line_if_old)
+				last_line_if_old = buffered_line
+			else:
+				if last_line_if_old is None:
+					# No old line immediately preceding this, so just print it.
+					print_single_line(buffered_line)
+				else:
+					old_line = last_line_if_old
+					new_line = buffered_line
+
+					old_line_output = [prefixes['-']]
+					new_line_output = [prefixes['+']]
+					for node in common_and_distinct_substrings(old_line[1:], new_line[1:]):
+						if node.differ:
+							old_line_output.append(BEGIN_REVERSE_FORMAT)
+							old_line_output.append(str(node.a))
+							old_line_output.append(END_REVERSE_FORMAT)
+
+							new_line_output.append(BEGIN_REVERSE_FORMAT)
+							new_line_output.append(str(node.b))
+							new_line_output.append(END_REVERSE_FORMAT)
+						else:
+							old_line_output.append(str(node.a))
+							new_line_output.append(str(node.b))
+
+					last_line_if_old = None
+					sys.stdout.writelines(''.join(old_line_output))
+					sys.stdout.writelines(''.join(new_line_output))
+		else:
+			if last_line_if_old is not None:
+				print_single_line(last_line_if_old)
+
+		del buffer_old[:]
+		del buffer_new[:]
+
 	for line in fileinput.input():
 		if line.startswith('-') and not line.startswith('---'):
 			buffer_old.append(line)
@@ -165,17 +344,7 @@ if __name__ == "__main__":
 			buffer_new.append(line)
 			continue
 		else:
-			# Flush the buffers, interleaving the lines.
-			for buffered_line in interleave(buffer_old, buffer_new):
-				prefix = '-' if buffered_line.startswith('-') else '+'
-				buffered_line = buffered_line[len(prefix):]
-
-				sys.stdout.write(prefixes[prefix])
-				sys.stdout.write(buffered_line)
-				sys.stdout.write(RESET_FORMAT)
-
-			del buffer_old[:]
-			del buffer_new[:]
+			flush_buffers(buffer_old, buffer_new)
 
 		for prefix_to_test in prefixes:
 			if line.startswith(prefix_to_test):
@@ -185,3 +354,5 @@ if __name__ == "__main__":
 		sys.stdout.write(line)
 
 		sys.stdout.write(RESET_FORMAT)
+	else:
+		flush_buffers(buffer_old, buffer_new)
