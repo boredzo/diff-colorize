@@ -27,7 +27,7 @@ BEGIN_REVERSE_FORMAT = '\033[7m'
 END_REVERSE_FORMAT = '\033[27m'
 
 USAGE = """
-diff-colorize 1.0 by Peter Hosey
+diff-colorize 1.1 by Peter Hosey
 
 Usage: diff ... | diff-colorize
    or:            diff-colorize < foo.diff
