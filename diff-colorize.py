@@ -106,7 +106,7 @@ class Substring(object):
 			)
 
 def longest_common_substring(a, b):
-	"""Returns a set of common substrings between a and b, which can be any finite indexable sliceable sequences. Substrings are returned as Substring objects.
+	"""Returns the longest common substring between a and b, which can be any finite indexable sliceable sequences, as a Substring object. Returns None if there is no substring between the sequences.
 
 Clarified and slightly modified (to use a special Substring object) from http://en.wikibooks.org/w/index.php?title=Algorithm_implementation/Strings/Longest_common_substring&oldid=1419225#Python
 """
@@ -129,7 +129,43 @@ Clarified and slightly modified (to use a special Substring object) from http://
 	else:
 		if current_run_length > 0:
 			substrings.add(Substring(a, a_idx - current_run_length + 1, a_idx + 1, b, b_idx - current_run_length + 1, b_idx + 1))
-	return substrings
+	try:
+		return substrings.pop()
+	except KeyError:
+		return None
+
+def common_subsequence(a, b):
+	"Returns all common substrings between a and b, which can be any finite indexable sliceable sequences, as Substring objects. Determines this by recursively calling itself on slices of a and b before and after each longest common substring."
+	# Inspired by http://en.wikibooks.org/w/index.php?title=Algorithm_Implementation/Strings/Longest_common_subsequence&oldid=1912924#Python
+	def LCS_length_matrix(a, b):
+		matrix = [[0] * (len(b) + 1) for i in xrange(len(a) + 1)]
+		for i, a_ch in enumerate(a):
+			for j, b_ch in enumerate(b):
+				if a_ch == b_ch:
+					matrix[i + 1][j + 1] = matrix[i][j] + 1
+				else:
+					matrix[i + 1][j + 1] = max(matrix[i + 1][j], matrix[i][j + 1])
+		return matrix
+
+	def recursive_build_subsequence(a, b, matrix=None, i=None, j=None):
+		if matrix is None:
+			matrix = LCS_length_matrix(a, b)
+		if i is None:
+			i = len(a)
+		if j is None:
+			j = len(b)
+
+		if i == 0 or j == 0:
+			return []
+		elif a[i - 1] == b[j - 1]:
+			return recursive_build_subsequence(a, b, matrix, i - 1, j - 1) + [Substring(a, i - 1, i, b, j - 1, j)]
+		else:
+			if matrix[i][j - 1] > matrix[i - 1][j]:
+				return recursive_build_subsequence(a, b, matrix, i, j - 1)
+			else:
+				return recursive_build_subsequence(a, b, matrix, i - 1, j)
+
+	return recursive_build_subsequence(a, b)
 
 def common_and_distinct_substrings(a, b):
 	"Takes two strings, a and b, tokenizes them, and returns a linked list whose nodes contain runs of either common or unique tokens."
@@ -178,7 +214,7 @@ def common_and_distinct_substrings(a, b):
 	chunks_head.next = DualPayloadLinkedListNode(empty_substring, empty_substring, False)
 	# Not chunks_head.next, since it will be replaced.
 	chunks_tail = chunks_head
-	for sub in sorted(longest_common_substring(a, b)):
+	for sub in sorted(common_subsequence(a, b)):
 		last_sub = chunks_tail.a
 		a_dif_run = ''.join(a[last_sub.a_stop:sub.a_start])
 		b_dif_run = ''.join(b[last_sub.b_stop:sub.b_start])
