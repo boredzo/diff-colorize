@@ -323,6 +323,8 @@ if __name__ == "__main__":
 	buffer_old = [] # '-' lines
 	buffer_new = [] # '+' lines
 
+	from string import whitespace
+
 	def flush_buffers(buffer_old, buffer_new):
 		"Flush the buffers, interleaving the lines and highlighting differences between them."
 		def print_single_line(buffered_line):
@@ -349,8 +351,17 @@ if __name__ == "__main__":
 
 					old_line_output = [prefixes['-']]
 					new_line_output = [prefixes['+']]
-					for node in common_and_distinct_substrings(old_line[1:], new_line[1:]):
-						if node.differ:
+
+					differenced_lines = common_and_distinct_substrings(old_line[1:], new_line[1:])
+					lines_have_any_non_whitespace_part_in_common = False
+					for node in differenced_lines:
+						if not node.differ:
+							if str(node.a) not in whitespace:
+								lines_have_any_non_whitespace_part_in_common = True
+								break
+
+					for node in differenced_lines:
+						if lines_have_any_non_whitespace_part_in_common and node.differ:
 							old_line_output.append(BEGIN_REVERSE_FORMAT)
 							old_line_output.append(str(node.a))
 							old_line_output.append(END_REVERSE_FORMAT)
