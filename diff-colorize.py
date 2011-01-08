@@ -174,7 +174,7 @@ def common_and_distinct_substrings(a, b):
 	def tokenize(a):
 		"Each token is an identifier, a number, or a single character."
 		import re
-		# Word in identifier, word in macro name (MACRO_NAME), binary number, hex number, decimal number, operator, other punctuation.
+		# Word in identifier, word in macro name (MACRO_NAME), binary number, hex number, decimal or octal number, operator, other punctuation.
 		token_exp = re.compile('[_A-Z]*[_a-z0-9]+:?|_??[A-Z0-9]+:?|0b[01]+|0[xX][0-9A-Fa-f]+|[0-9]+|[-+*|&^/%\[\]<=>,]|[()\\\\;`{}]')
 		start = 0
 		for match in token_exp.finditer(a):
