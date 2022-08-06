@@ -3,6 +3,7 @@
 import sys
 import os
 import fileinput
+import functools
 
 has_256_color = (os.environ.get('TERM', None) == 'xterm-256color')
 
@@ -48,7 +49,7 @@ def interleave(*sequences):
 	
 	def zip_pad(*iterables, **kw):
 		"Downloaded from http://code.activestate.com/recipes/497007/"
-		from itertools import izip, chain
+		from itertools import chain
 		if kw:
 			assert len(kw) == 1
 			pad = kw["pad"]
@@ -62,13 +63,14 @@ def interleave(*sequences):
 			while 1:
 				yield pad
 		iterables = [chain(seq, pad_iter()) for seq in iterables]
-		return izip(*iterables)
+		return zip(*iterables)
 
 	for objects in zip_pad(*sequences):
 		for obj in objects:
 			if obj is not None:
 				yield obj
 
+@functools.total_ordering
 class Substring(object):
 	def __init__(self, a, a_start, a_stop, b, b_start, b_stop):
 		self.a = a
@@ -93,8 +95,8 @@ class Substring(object):
 
 	def __hash__(self):
 		return hash(self.substring())
-	def __cmp__(self, other):
-		return cmp(self.a_start, other.a_start)
+	def __lt__(self, other):
+		return self.a_start < other.a_start
 	def __eq__(self, other):
 		return self.substring() == other.substring()
 	def __str__(self):
@@ -114,11 +116,11 @@ Clarified and slightly modified (to use a special Substring object) from http://
 """
 	a_len = len(a)
 	b_len = len(b)
-	lengths = [[0] * (b_len + 1) for i in xrange(a_len + 1)]
+	lengths = [[0] * (b_len + 1) for i in range(a_len + 1)]
 	substrings = set()
 	greatest_length = current_run_length = 0
-	for a_idx in xrange(a_len):
-		for b_idx in xrange(b_len):
+	for a_idx in range(a_len):
+		for b_idx in range(b_len):
 			if a[a_idx] == b[b_idx]:
 				current_run_length = lengths[a_idx][b_idx] + 1
 				lengths[a_idx+1][b_idx+1] = current_run_length
@@ -140,7 +142,7 @@ def common_subsequence(a, b):
 	"Returns all common substrings between a and b, which can be any finite indexable sliceable sequences, as Substring objects. Determines this by recursively calling itself on slices of a and b before and after each longest common substring."
 	# Inspired by http://en.wikibooks.org/w/index.php?title=Algorithm_Implementation/Strings/Longest_common_subsequence&oldid=1912924#Python
 	def LCS_length_matrix(a, b):
-		matrix = [[0] * (len(b) + 1) for i in xrange(len(a) + 1)]
+		matrix = [[0] * (len(b) + 1) for i in range(len(a) + 1)]
 		for i, a_ch in enumerate(a):
 			for j, b_ch in enumerate(b):
 				if a_ch == b_ch:
